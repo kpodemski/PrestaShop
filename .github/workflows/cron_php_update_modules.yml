@@ -45,18 +45,7 @@ jobs:
         id: updated-packages
         run: | 
           FILE_CONTENT=$(cat cron_php_update_modules.txt)
-          echo PACKAGES=$FILE_CONTENT >> $GITHUB_OUTPUT
-        
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        if: ${{steps.updated-packages.outputs.PACKAGES}} != ''
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: cron-php-update-modules-${{ env.GH_BRANCH }}
-          commit-message: Updated PrestaShop Packages
-          committer: PrestonBot <noreply@github.com>
-          author: prestonBot <prestonBot@users.noreply.github.com>
-          title: 'Updated PrestaShop Packages'
-          body: ${{ env.PULL_REQUEST_BODY }}
-          base: ${{ env.GH_BRANCH }}
-          delete-branch: true
+          echo PR_BODY=$FILE_CONTENT >> $GITHUB_OUTPUT
+          
+      - name: test
+        run: echo ${{steps.updated-packages.outputs.PR_BODY}}
