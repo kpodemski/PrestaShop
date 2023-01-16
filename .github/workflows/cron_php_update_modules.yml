@@ -16,8 +16,6 @@ jobs:
       matrix:
         BRANCH:
           - develop
-          - 8.0.x
-          - 1.7.8.x
     env:
       GH_BRANCH: ${{ matrix.BRANCH }}
 
@@ -43,14 +41,22 @@ jobs:
       - name: Execute script for updating modules
         run: php .github/workflows/cron_update_modules/script.php ${{ env.GH_BRANCH }}
         
-      - name: Cache modules
-        uses: actions/cache@v2
-        id: cache-modules
-        env:
-          cache-name: cache-modules
-        with:
-          path: cron_php_update_modules.txt
-          key: ${{ env.GH_BRANCH }}-${{ env.cache-name }}
-
+      - name: Update PrestaShop packages
+        id: updated-packages
+        run: | 
+          FILE_CONTENT=$(cat cron_php_update_modules.txt)
+          echo PACKAGES=$FILE_CONTENT >> $GITHUB_OUTPUT
+        
       - name: Create Pull Request
-        run: echo ${{ steps.cache-modules.outputs }}
+        uses: peter-evans/create-pull-request@v3
+        if: ${{steps.updated-packages.outputs.PACKAGES}} != ''
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: cron-php-update-modules-${{ env.GH_BRANCH }}
+          commit-message: Updated PrestaShop Packages
+          committer: PrestonBot <noreply@github.com>
+          author: prestonBot <prestonBot@users.noreply.github.com>
+          title: 'Updated PrestaShop Packages'
+          body: ${{ env.PULL_REQUEST_BODY }}
+          base: ${{ env.GH_BRANCH }}
+          delete-branch: true
