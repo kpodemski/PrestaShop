@@ -27,9 +27,10 @@
 namespace PrestaShop\PrestaShop\Core\Addon\Theme;
 
 use AbstractAssetManager;
+use Symfony\Component\Finder\Finder;
 use PrestaShop\PrestaShop\Adapter\Configuration;
-use PrestaShop\PrestaShop\Core\Addon\AddonInterface;
 use PrestaShop\PrestaShop\Core\Util\ArrayFinder;
+use PrestaShop\PrestaShop\Core\Addon\AddonInterface;
 use PrestaShop\PrestaShop\Core\Util\File\YamlParser;
 
 class Theme implements AddonInterface
@@ -65,6 +66,20 @@ class Theme implements AddonInterface
 
         if (file_exists($themesDirectory . $attributes['name'] . '/preview.png')) {
             $attributes['preview'] = 'themes/' . $attributes['name'] . '/preview.png';
+        }
+
+        // We need to check if current theme has any parents
+        $attributes['has_parent'] = false;
+        $attributes['parent_name'] = null;
+        $finder = new Finder();
+        $finder->files()->in($themesDirectory)->name('theme.yml');
+        foreach ($finder as $file) {
+            $yamlParser = new YamlParser($configurationCacheDirectory);
+            $themeAttributes = $yamlParser->parse($file->getRealPath());
+            if (!empty($themeAttributes['parent']) && $themeAttributes['parent'] === $attributes['name']) {
+                $attributes['has_parent'] = true;
+                $attributes['parent_name'] = $themeAttributes['name'];
+            }
         }
 
         $this->attributes = new ArrayFinder($attributes);

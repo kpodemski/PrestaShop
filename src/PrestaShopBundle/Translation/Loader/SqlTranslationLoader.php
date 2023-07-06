@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -73,11 +74,25 @@ class SqlTranslationLoader implements LoaderInterface
             throw new NotFoundResourceException(sprintf('Language not found in database: %s', $locale));
         }
 
+        $themesToGetTranslationsFrom = [];
+
+        if ($this->theme !== null) {
+            $themesToGetTranslationsFrom[] = $this->theme->getName();
+
+            if ($this->theme->get('has_parent')) {
+                $themesToGetTranslationsFrom[] = $this->theme->get('parent_name');
+            }
+
+            if ($this->theme->get('parent')) {
+                $themesToGetTranslationsFrom[] = $this->theme->get('parent');
+            }
+        }
+
         $selectTranslationsQuery = '
-            SELECT `key`, `translation`, `domain`
+            SELECT `key`, `translation`, `domain`, `theme`
             FROM `' . _DB_PREFIX_ . 'translation`
             WHERE `id_lang` = ' . $localeResults[$locale]['id_lang'] . '
-            AND theme ' . ($this->theme !== null ? '= "' . $this->theme->getName() . '"' : 'IS NULL');
+            AND theme ' . (!empty($themesToGetTranslationsFrom) ? ' IN ("' . implode('","', $themesToGetTranslationsFrom) . '")' : 'IS NULL');
 
         $translations = Db::getInstance()->executeS($selectTranslationsQuery) ?: [];
 
