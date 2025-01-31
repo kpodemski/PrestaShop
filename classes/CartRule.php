@@ -1739,18 +1739,20 @@ class CartRuleCore extends ObjectModel
                 $errors[] = $error;
             }
 
-            // Perform additional checks for validity
-            if (!$cart_rule['obj']->active) {
-                $errors[] = $cart_rule['obj']->trans('This voucher is disabled', [], 'Shop.Notifications.Error');
-            }
-            if (!$cart_rule['obj']->quantity) {
-                $errors[] = $cart_rule['obj']->trans('This voucher has already been used', [], 'Shop.Notifications.Error');
-            }
-            if (strtotime($cart_rule['obj']->date_from) > $now) {
-                $errors[] = $cart_rule['obj']->trans('This voucher is not valid yet', [], 'Shop.Notifications.Error');
-            }
-            if (strtotime($cart_rule['obj']->date_to) < $now) {
-                $errors[] = $cart_rule['obj']->trans('This voucher has expired', [], 'Shop.Notifications.Error');
+            // Perform additional checks for validity, but only in the front office (!$userOrderPrices)
+            if (!$userOrderPrices) {
+                if (!$cart_rule['obj']->active) {
+                    $errors[] = $cart_rule['obj']->trans('This voucher is disabled', [], 'Shop.Notifications.Error');
+                }
+                if (!$cart_rule['obj']->quantity) {
+                    $errors[] = $cart_rule['obj']->trans('This voucher has already been used', [], 'Shop.Notifications.Error');
+                }
+                if (strtotime($cart_rule['obj']->date_from) > $now) {
+                    $errors[] = $cart_rule['obj']->trans('This voucher is not valid yet', [], 'Shop.Notifications.Error');
+                }
+                if (strtotime($cart_rule['obj']->date_to) < $now) {
+                    $errors[] = $cart_rule['obj']->trans('This voucher has expired', [], 'Shop.Notifications.Error');
+                }
             }
 
             if (!empty($errors)) {
